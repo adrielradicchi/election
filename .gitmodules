@@ -1,0 +1,6 @@
+[submodule "api_auth"]
+	path = api_auth
+	url = https://github.com/adrielradicchi/api_auth.git
+[submodule "vote"]
+	path = vote
+	url = https://github.com/adrielradicchi/votes.git
