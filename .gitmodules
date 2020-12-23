@@ -4,3 +4,6 @@
 [submodule "vote"]
 	path = vote
 	url = https://github.com/adrielradicchi/votes.git
+
+
+./elixir_ls
