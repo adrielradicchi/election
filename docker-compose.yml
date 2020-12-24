@@ -56,6 +56,19 @@ services:
     volumes:
       - postgres:/home/adrielradicchi/Projects/DataBase/PostgreSQL/
 
+  test_authentication:
+    image: km_online_authentication
+    command: mix test
+    environment:
+      - MIX_ENV=test
+    volumes:
+      - ./api_auth:/api_auth
+      - ./api_auth:/root
+    networks:
+      - backend-tier
+    depends_on:
+      - db
+  
 volumes:
   postgres:
     driver: local
