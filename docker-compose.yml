@@ -1,34 +1,26 @@
 version: '3'
 
 services:
-  web:    
-    build: .
-    restart: unless-stopped
-    depends_on:      
-      - web_ruby 
-    networks:
-      - backend-tier
-    ports:      
-      - 80:80
-
   web_ruby: 
     build: ./vote 
     restart: unless-stopped
+    command: ash -c "rails db:migrate && bundle exec puma -C config/puma.rb"
     ports:
       - 3000:3000
     networks:
       - backend-tier
     depends_on:
       - db
+      - authentication
     volumes:
-      - ./vote:/vote
-      - ./vote:/root  
+      - ./vote:/var/www/vote
 
   authentication:
+    build: ./api_auth
     ports:
       - 4000:4000
-    build: ./api_auth
     restart: unless-stopped
+    command: ash -c "mix ecto.reset && mix phx.server" 
     networks:
       - backend-tier
     environment:
@@ -40,37 +32,46 @@ services:
       - ./api_auth:/root
     depends_on:
       - db
-
+  
   db:
-    image: library/postgres:11.1-alpine
-    environment:
-      PGDATA: /home/adrielradicchi/Projects/DataBase/PostgreSQL/
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_HOST_AUTH_METHOD: trust
+    image: library/postgres:12.1-alpine
     ports:
       - 5432:5432
     restart: unless-stopped
     networks:
       - backend-tier
     volumes:
-      - postgres:/home/adrielradicchi/Projects/DataBase/PostgreSQL/
-
-  test_authentication:
-    image: km_online_authentication
-    command: mix test
+      - /var/lib/postgresql/data:/home/adrielradicchi/Projects/DataBase/PostgreSQL/
     environment:
-      - MIX_ENV=test
-    volumes:
-      - ./api_auth:/api_auth
-      - ./api_auth:/root
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  web:    
+    build: .
+    restart: unless-stopped
+    depends_on:      
+      - web_ruby
+      - authentication
     networks:
       - backend-tier
-    depends_on:
-      - db
-  
-volumes:
-  postgres:
+    ports:      
+      - 80:80
+
+  # test_authentication:
+  #   image: km_online_authentication
+  #   command: mix test
+  #   environment:
+  #     - MIX_ENV=test
+  #   volumes:
+  #     - ./api_auth:/api_auth
+  #     - ./api_auth:/root
+  #   networks:
+  #     - backend-tier
+  #   depends_on:
+  #     - db
+
+volumes: 
+  postgres: 
     driver: local
 
 networks:
